@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import gsap from 'gsap';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
-//continuer la vidéo à 19:35
+//continuer la vidéo à 46:36
 export default class Experience {
   constructor() {
     this.sizes = {
@@ -10,6 +11,7 @@ export default class Experience {
     };
 
     this.canvas = document.querySelector('.webgl');
+    this.gltfLoader = new GLTFLoader();
     this.scene = new THREE.Scene();
     this.clock = new THREE.Clock();
 
@@ -23,6 +25,7 @@ export default class Experience {
     });
 
     this.createCamera();
+    this.createLights();
     this.createObjects();
     this.createRenderer();
     this.animate();
@@ -43,6 +46,15 @@ export default class Experience {
     this.scene.add(this.camera);
   }
 
+  createLights() {
+    const ambientLight = new THREE.AmbientLight('#ffffff', 0.8);
+    this.scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight('#ffffff', 4);
+    directionalLight.position.set(1, 2, 5);
+    this.scene.add(directionalLight);
+  }
+
   createRenderer() {
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
@@ -60,7 +72,14 @@ export default class Experience {
     });
     this.cube = new THREE.Mesh(geometry, material); // on applique la forme et le materiel pour faire un mesh
     this.cube.position.x = 2;
-    this.scene.add(this.cube);
+    //this.scene.add(this.cube);
+
+    this.gltfLoader.load('assets/models/ac/scene.gltf', (gltf) => {
+      this.model = gltf.scene;
+      this.model.scale.set(0.005, 0.005, 0.005);
+      this.model.rotation.x = 1.5;
+      this.scene.add(this.model);
+    });
   }
 
   resize() {
@@ -93,10 +112,17 @@ export default class Experience {
       const entry = entries[i];
       const target = entry.target;
 
-      if (entry.isIntersecting) {
-        gsap.to(this.cube.position, {
+      if (entry.isIntersecting && this.model) {
+        gsap.to(this.model.position, {
           duration: 1,
           ease: 'Power2.inOut',
+          x: target.dataset.p,
+        });
+
+        gsap.to(this.model.rotation, {
+          duration: 1,
+          ease: 'Power2.inOut',
+          x: target.dataset.p,
         });
       }
     }
